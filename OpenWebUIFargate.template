@@ -358,7 +358,7 @@ Resources:
             Ref: OpenWebUIALBListenerTargetsGroup
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: DISABLED
+          AssignPublicIp: ENABLED
           SecurityGroups:
             - Fn::GetAtt:
                 - OpenWebUIServiceSecurityGroup
