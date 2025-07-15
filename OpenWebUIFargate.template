@@ -23,7 +23,7 @@ Parameters:
     Description: Comma-separated list of CIDR blocks allowed to access the web UI (e.g., "10.0.0.0/8,172.16.0.0/12")
   WebPort:
     Type: Number
-    Default: 80
+    Default: 8080
     Description: The port on which the web UI will be exposed
     MinValue: 1
     MaxValue: 65535
