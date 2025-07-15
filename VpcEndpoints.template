@@ -1,0 +1,310 @@
+Description: VPC Endpoints for OpenWebUI - ECR, Secrets Manager, EFS, Bedrock, and CloudWatch
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: The ID of the existing VPC where the VPC endpoints will be created
+  PrivateSubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: List of private subnet IDs where the VPC endpoints will be deployed (minimum 2 for high availability)
+  CreatedBy:
+    Type: String
+    Description: The name or identifier of who created this stack
+
+Resources:
+  # VPC Endpoint for ECR API
+  EcrApiEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId:
+        Ref: VpcId
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ecr.api"
+      VpcEndpointType: Interface
+      SubnetIds:
+        Ref: PrivateSubnetIds
+      SecurityGroupIds:
+        - !Ref EcrEndpointSecurityGroup
+      PrivateDnsEnabled: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-ecr-api-endpoint"
+        - Key: CreatedBy
+          Value:
+            Ref: CreatedBy
+
+  # VPC Endpoint for ECR DKR (Docker Registry)
+  EcrDkrEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId:
+        Ref: VpcId
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ecr.dkr"
+      VpcEndpointType: Interface
+      SubnetIds:
+        Ref: PrivateSubnetIds
+      SecurityGroupIds:
+        - !Ref EcrEndpointSecurityGroup
+      PrivateDnsEnabled: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-ecr-dkr-endpoint"
+        - Key: CreatedBy
+          Value:
+            Ref: CreatedBy
+
+  # VPC Endpoint for Secrets Manager
+  SecretsManagerEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId:
+        Ref: VpcId
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.secretsmanager"
+      VpcEndpointType: Interface
+      SubnetIds:
+        Ref: PrivateSubnetIds
+      SecurityGroupIds:
+        - !Ref SecretsManagerEndpointSecurityGroup
+      PrivateDnsEnabled: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-secretsmanager-endpoint"
+        - Key: CreatedBy
+          Value:
+            Ref: CreatedBy
+
+  # VPC Endpoint for EFS
+  EfsEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId:
+        Ref: VpcId
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.elasticfilesystem"
+      VpcEndpointType: Interface
+      SubnetIds:
+        Ref: PrivateSubnetIds
+      SecurityGroupIds:
+        - !Ref EfsEndpointSecurityGroup
+      PrivateDnsEnabled: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-efs-endpoint"
+        - Key: CreatedBy
+          Value:
+            Ref: CreatedBy
+
+  # VPC Endpoint for Bedrock
+  BedrockEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId:
+        Ref: VpcId
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.bedrock-runtime"
+      VpcEndpointType: Interface
+      SubnetIds:
+        Ref: PrivateSubnetIds
+      SecurityGroupIds:
+        - !Ref BedrockEndpointSecurityGroup
+      PrivateDnsEnabled: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-bedrock-endpoint"
+        - Key: CreatedBy
+          Value:
+            Ref: CreatedBy
+
+  # VPC Endpoint for CloudWatch Logs
+  CloudWatchLogsEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId:
+        Ref: VpcId
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.logs"
+      VpcEndpointType: Interface
+      SubnetIds:
+        Ref: PrivateSubnetIds
+      SecurityGroupIds:
+        - !Ref CloudWatchEndpointSecurityGroup
+      PrivateDnsEnabled: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-cloudwatch-logs-endpoint"
+        - Key: CreatedBy
+          Value:
+            Ref: CreatedBy
+
+  # VPC Endpoint for CloudWatch Monitoring
+  CloudWatchMonitoringEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId:
+        Ref: VpcId
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.monitoring"
+      VpcEndpointType: Interface
+      SubnetIds:
+        Ref: PrivateSubnetIds
+      SecurityGroupIds:
+        - !Ref CloudWatchEndpointSecurityGroup
+      PrivateDnsEnabled: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-cloudwatch-monitoring-endpoint"
+        - Key: CreatedBy
+          Value:
+            Ref: CreatedBy
+
+  # Security Group for ECR Endpoints
+  EcrEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for ECR VPC endpoints
+      VpcId:
+        Ref: VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: Allow HTTPS inbound from VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-ecr-endpoint-sg"
+        - Key: CreatedBy
+          Value:
+            Ref: CreatedBy
+
+  # Security Group for Secrets Manager Endpoint
+  SecretsManagerEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Secrets Manager VPC endpoint
+      VpcId:
+        Ref: VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: Allow HTTPS inbound from VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-secretsmanager-endpoint-sg"
+        - Key: CreatedBy
+          Value:
+            Ref: CreatedBy
+
+  # Security Group for EFS Endpoint
+  EfsEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for EFS VPC endpoint
+      VpcId:
+        Ref: VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: Allow HTTPS inbound from VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-efs-endpoint-sg"
+        - Key: CreatedBy
+          Value:
+            Ref: CreatedBy
+
+  # Security Group for Bedrock Endpoint
+  BedrockEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Bedrock VPC endpoint
+      VpcId:
+        Ref: VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: Allow HTTPS inbound from VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-bedrock-endpoint-sg"
+        - Key: CreatedBy
+          Value:
+            Ref: CreatedBy
+
+  # Security Group for CloudWatch Endpoints
+  CloudWatchEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for CloudWatch VPC endpoints
+      VpcId:
+        Ref: VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: Allow HTTPS inbound from VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-cloudwatch-endpoint-sg"
+        - Key: CreatedBy
+          Value:
+            Ref: CreatedBy
+
+Outputs:
+  EcrApiEndpointId:
+    Description: ECR API VPC Endpoint ID
+    Value:
+      Ref: EcrApiEndpoint
+    Export:
+      Name: !Sub "${AWS::StackName}-ecr-api-endpoint-id"
+
+  EcrDkrEndpointId:
+    Description: ECR DKR VPC Endpoint ID
+    Value:
+      Ref: EcrDkrEndpoint
+    Export:
+      Name: !Sub "${AWS::StackName}-ecr-dkr-endpoint-id"
+
+  SecretsManagerEndpointId:
+    Description: Secrets Manager VPC Endpoint ID
+    Value:
+      Ref: SecretsManagerEndpoint
+    Export:
+      Name: !Sub "${AWS::StackName}-secretsmanager-endpoint-id"
+
+  EfsEndpointId:
+    Description: EFS VPC Endpoint ID
+    Value:
+      Ref: EfsEndpoint
+    Export:
+      Name: !Sub "${AWS::StackName}-efs-endpoint-id"
+
+  BedrockEndpointId:
+    Description: Bedrock VPC Endpoint ID
+    Value:
+      Ref: BedrockEndpoint
+    Export:
+      Name: !Sub "${AWS::StackName}-bedrock-endpoint-id"
+
+  CloudWatchLogsEndpointId:
+    Description: CloudWatch Logs VPC Endpoint ID
+    Value:
+      Ref: CloudWatchLogsEndpoint
+    Export:
+      Name: !Sub "${AWS::StackName}-cloudwatch-logs-endpoint-id"
+
+  CloudWatchMonitoringEndpointId:
+    Description: CloudWatch Monitoring VPC Endpoint ID
+    Value:
+      Ref: CloudWatchMonitoringEndpoint
+    Export:
+      Name: !Sub "${AWS::StackName}-cloudwatch-monitoring-endpoint-id"
+
+  VpcId:
+    Description: The VPC ID where the VPC endpoints are deployed
+    Value:
+      Ref: VpcId
+    Export:
+      Name: !Sub "${AWS::StackName}-vpc-id" 

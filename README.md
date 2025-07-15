@@ -5,6 +5,7 @@ A CloudFormation template for deploying [OpenWebUI](https://github.com/open-webu
 ## 🚀 Features
 
 - **Private VPC Deployment**: Secure deployment within your existing VPC
+- **VPC Endpoints**: Truly private deployment with no internet access required
 - **ECS Fargate**: Serverless container orchestration with automatic scaling
 - **Application Load Balancer**: Internal load balancer for high availability
 - **AWS Bedrock Integration**: Built-in permissions for AWS Bedrock model access
@@ -33,16 +34,44 @@ Before deploying this template, ensure you have:
                                 │
                                 ▼
                        ┌──────────────────┐
-                       │   AWS Bedrock    │
-                       │   (Optional)     │
+                       │   VPC Endpoints  │
+                       │   (ECR, Secrets, │
+                       │   Bedrock, etc.) │
+                       └──────────────────┘
+                                │
+                                ▼
+                       ┌──────────────────┐
+                       │   AWS Services   │
+                       │   (Private)      │
                        └──────────────────┘
 ```
 
 ## 📦 Deployment
 
-### 1. Prepare Your Environment
+### Step 1: Deploy VPC Endpoints (Required for Private Deployment)
 
-First, ensure you have the OpenWebUI Docker image in your ECR repository:
+**IMPORTANT**: For a truly private deployment with no internet access, you must deploy the VPC endpoints first. This ensures your OpenWebUI containers can access AWS services without requiring internet connectivity.
+
+```bash
+aws cloudformation create-stack \
+    --stack-name OpenWebUI-VPCEndpoints \
+    --template-body file://VpcEndpoints.template \
+    --parameters \
+        ParameterKey=VpcId,ParameterValue=vpc-XXXXXXXXX \
+        ParameterKey=PrivateSubnetIds,ParameterValue="subnet-XXXXXXXXX,subnet-YYYYYYYYY" \
+        ParameterKey=CreatedBy,ParameterValue="YourName"
+```
+
+This creates VPC endpoints for:
+- **ECR API & DKR**: For pulling Docker images
+- **Secrets Manager**: For accessing API keys
+- **EFS**: For file system operations
+- **Bedrock**: For AI model inference
+- **CloudWatch Logs & Monitoring**: For logging and metrics
+
+### Step 2: Prepare Your Environment
+
+Ensure you have the OpenWebUI Docker image in your ECR repository:
 
 ```bash
 # Build and push the OpenWebUI image to ECR
@@ -56,7 +85,7 @@ docker tag openwebui:latest YOUR_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/open
 docker push YOUR_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/openwebui:latest
 ```
 
-### 2. Create Secrets Manager Secret (Optional)
+### Step 3: Create Secrets Manager Secret (Optional)
 
 If you need to store API keys securely:
 
@@ -67,7 +96,7 @@ aws secretsmanager create-secret \
     --secret-string '{"api_key":"your-api-key-here"}'
 ```
 
-### 3. Deploy the CloudFormation Stack
+### Step 4: Deploy the OpenWebUI CloudFormation Stack
 
 ```bash
 aws cloudformation create-stack \
@@ -83,13 +112,37 @@ aws cloudformation create-stack \
         ParameterKey=CreatedBy,ParameterValue="YourName"
 ```
 
-### 4. Monitor Deployment
+### Step 5: Monitor Deployment
 
 ```bash
+# Check VPC Endpoints deployment
+aws cloudformation describe-stacks --stack-name OpenWebUI-VPCEndpoints --query 'Stacks[0].StackStatus'
+
+# Check OpenWebUI deployment
 aws cloudformation describe-stacks --stack-name OpenWebUI-Fargate --query 'Stacks[0].StackStatus'
 ```
 
+## 🔒 Private Deployment Benefits
+
+By deploying the VPC endpoints first, you achieve:
+
+- **No Internet Access Required**: All AWS service communication stays within your VPC
+- **Enhanced Security**: Eliminates potential attack vectors from internet
+- **Better Performance**: Lower latency for AWS service calls
+- **Compliance**: Meets strict security requirements for private environments
+- **Cost Optimization**: No NAT Gateway charges for AWS service access
+
 ## ⚙️ Configuration Parameters
+
+### VPC Endpoints Template Parameters
+
+| Parameter | Description | Required |
+|-----------|-------------|----------|
+| `VpcId` | Existing VPC ID | Yes |
+| `PrivateSubnetIds` | List of private subnet IDs (minimum 2) | Yes |
+| `CreatedBy` | Creator identifier | Yes |
+
+### OpenWebUI Template Parameters
 
 | Parameter | Description | Default | Required |
 |-----------|-------------|---------|----------|

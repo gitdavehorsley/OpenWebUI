@@ -18,54 +18,27 @@ Thumbs.db
 *.log
 logs/
 
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# Coverage directory used by tools like istanbul
-coverage/
-
-# nyc test coverage
-.nyc_output
-
-# Dependency directories
-node_modules/
-jspm_packages/
-
-# Optional npm cache directory
-.npm
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# dotenv environment variables file
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Temporary files
+*.tmp
+*.temp
 
 # AWS credentials and config
 .aws/
 aws-credentials.json
 
-# Terraform
-*.tfstate
-*.tfstate.*
-.terraform/
+# Environment files
+.env
+.env.local
+.env.*.local
 
-# CloudFormation
-*.template.bak
-*.template.backup
+# Node modules (if any scripts are added later)
+node_modules/
 
-# Temporary files
-*.tmp
-*.temp 
+# Python cache (if any scripts are added later)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Backup files
+*.bak
+*.backup 
