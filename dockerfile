@@ -1,16 +1,25 @@
-# Start with a base image (consider using a lightweight base image like Alpine for smaller image sizes)
-FROM ghcr.io/open-webui/open-webui:main
+# Use an official Python runtime as a parent image
+FROM python:3.10-slim
 
-# (Optional) Add any specific configurations or dependencies needed for your use case
-# For example, if you need specific Python packages not included in the default image:
-# RUN pip install your_package
+# Set the working directory in the container
+WORKDIR /app
 
-# (Optional) Set environment variables, such as disabling multi-user mode
-# ENV WEBUI_AUTH=False
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    && rm -rf /var/lib/apt/lists/*
 
-# Expose the port where Open WebUI listens (default is 8080)
+# Clone Open WebUI repository
+RUN git clone https://github.com/open-webui/open-webui.git .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Expose the port the app runs on
 EXPOSE 8080
 
-# Keep the original entrypoint and command from the base image
-# ENTRYPOINT ["bash", "start.sh"]
-# CMD ["bash", "start.sh"]
+# Define environment variable
+ENV HOST=0.0.0.0
+
+# Run the application
+CMD ["python", "app.py"]
